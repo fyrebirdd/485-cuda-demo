@@ -62,68 +62,31 @@ std::chrono::milliseconds numberSearchCuda(std::vector<char> board, int* output,
     const int blockSize = 256;
     const int gridSize = (row_amount + blockSize - 1) / blockSize;
 
-
-
-    std::chrono::steady_clock::time_point start;
-    std::chrono::steady_clock::time_point end;
-
     std::chrono::milliseconds procDuration;
 
-    start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
     cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!");
-        goto Error;
-    }
+
     //allocate memory on gpu
     cudaStatus = cudaMalloc((void**)&dev_output, sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
 
     cudaStatus = cudaMalloc((void**)&dev_board, row_amount * sizeof(char));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
 
     //copy data to gpu
     cudaStatus = cudaMemcpy(dev_board, board.data(), row_amount * sizeof(char), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }    
 
     //launch kernel
     charSearchKernel <<<gridSize, blockSize>>> (dev_board, target, row_amount, dev_output);
 
-
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "charSearch launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
-
     // blocks main thread until kernel is finished, returns any errors
     cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching charSearchKernel!\n", cudaStatus);
-        goto Error;
-    }
-
 
     cudaStatus = cudaMemcpy(output, dev_output, sizeof(int), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
 
-    end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-Error:
     cudaFree(dev_output);
     cudaFree(dev_board);
 

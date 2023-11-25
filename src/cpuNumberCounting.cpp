@@ -14,21 +14,18 @@ int main(int argc, char* argv[]){
     int rows = atoi(argv[2]);
     std::string numberToFind = argv[3];
 
-    std::chrono::steady_clock::time_point start;
-    std::chrono::steady_clock::time_point end;
-
     std::chrono::milliseconds mallocDuration;
     std::chrono::milliseconds procDuration;
     
-    start = std::chrono::high_resolution_clock::now();
+    auto fileStart = std::chrono::high_resolution_clock::now();
 
     auto matrix = testFileToArray(fileName, rows);
 
-    end = std::chrono::high_resolution_clock::now();
+    auto fileEnd = std::chrono::high_resolution_clock::now();
 
-    mallocDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    mallocDuration = std::chrono::duration_cast<std::chrono::milliseconds>(fileEnd - fileStart);
 
-    start = std::chrono::high_resolution_clock::now();
+    auto procStart = std::chrono::high_resolution_clock::now();
 
     int numCount = 0;
 
@@ -38,8 +35,8 @@ int main(int argc, char* argv[]){
         }
     }
 
-    end = std::chrono::high_resolution_clock::now();
-    procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
+    auto procEnd = std::chrono::high_resolution_clock::now();
+    procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(procEnd-procStart);
 
     std::cout << "CPU: Load from file time (THIS RUNS ON CPU): " << mallocDuration.count() << "ms" << std::endl;
     std::cout << "CPU: Proccessing Time: " << procDuration.count() << "ms" << std::endl;
