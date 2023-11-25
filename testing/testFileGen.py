@@ -6,13 +6,13 @@ import random
     This script generates a NxM file with random numbers in it.
     EX. 
     
-    python cudaTestFileGenerator.py 1000 1000 test.txt 
+    python testFileGen.py 1000 1000 test.txt 
     
     will generate a file called test.txt with 1000 lines and 1000 random numbers per line.
 '''
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python cudaTestFileGenerator.py <number of rows> <output file name>")
+        print("Usage: python "+ sys.argv[0] +" <number of rows> <output file name>")
         return
     
     numRows = int(sys.argv[1])
