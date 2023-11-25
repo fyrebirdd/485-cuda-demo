@@ -1,0 +1,4 @@
+/bin
+/cmake-build
+/testing/*.txt
+*.exe
