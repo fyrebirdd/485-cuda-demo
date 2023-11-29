@@ -1,6 +1,6 @@
 if [ "$#" -ne 2 ]
 then
-  echo "USEAGE: runDemoFromBegining.sh <numberRows> <matrixFilename>"
+  echo "USEAGE: runDemoFromBegining.sh <numberRows> <targetChar>"
   exit 1
 fi
 
