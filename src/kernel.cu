@@ -6,6 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include <tuple>
+#include <cmath>
 
 __global__ void charSearchKernel(char* board, char character, int rows, int *output) 
 {
@@ -72,7 +73,8 @@ __global__ void euclideanDistanceKernel(char* vector, int size, float* result) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (tid < size) {
-        result[tid] = static_cast<float>(vector[tid]);
+        float square = static_cast<float>(vector[tid]) * static_cast<float>(vector[tid]);
+        atomicAdd(result,square);
     }
 }
 
@@ -99,18 +101,13 @@ std::chrono::milliseconds euclideanDistanceCUDA(std::vector<char>& inputVec, flo
 
     // Launch the kernel to convert characters to floats
     euclideanDistanceKernel<<<gridSize, blockSize>>>(d_vector, size, d_result);
-
     // Copy the result vector from device to host
-    float* h_result = new float[size];
-    cudaMemcpy(h_result, d_result, size * sizeof(float), cudaMemcpyDeviceToHost);
+    float* h_result = new float;
+    cudaMemcpy(h_result, d_result, sizeof(float), cudaMemcpyDeviceToHost);
 
-    // Calculate Euclidean distance on the host
-    float distance = 0.0f;
-    for (int i = 0; i < size; ++i) {
-        distance += h_result[i] * h_result[i];
-    }
-    distance = std::sqrt(distance);
-    *output = distance; 
+    float dist = sqrt(*h_result);
+    std::cout  << "FART " << dist <<std::endl;
+    *output = dist;
     
     auto end = std::chrono::high_resolution_clock::now();
     procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -139,7 +136,7 @@ int main(int argc, char* argv[])
     auto end = std::chrono::high_resolution_clock::now();
 
     int output = 0;
-    float outputDistance = 0.0f;
+    float outputDistance;
 
     std::chrono::milliseconds readFileTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::chrono::milliseconds procTime = charSearchCuda(input, &output, numberToFind);
