@@ -7,8 +7,6 @@
 #include <chrono>
 #include <tuple>
 
-std::chrono::milliseconds numberSearchCuda(std::vector<char> board, int* output, char target);
-
 __global__ void charSearchKernel(char* board, char character, int rows, int *output) 
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -21,35 +19,8 @@ __global__ void charSearchKernel(char* board, char character, int rows, int *out
     }
 }
 
-int main(int argc, char* argv[])
-{
-    if (argc != 4) {
-        std::cout << "Usage: " << argv[0] << " <input file>" << "<rows>" << "<number to find>" << std::endl;
-        exit(1);
-    }
-
-    std::string fileName = argv[1];
-    int rows = atoi(argv[2]);
-    char numberToFind = *argv[3];
-
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<char> input = testFileToArray(fileName, rows);
-    auto end = std::chrono::high_resolution_clock::now();
-
-    int output = 0;
-
-    std::chrono::milliseconds readFileTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::chrono::milliseconds procTime = numberSearchCuda(input, &output, numberToFind);
-
-    std::cout << "GPU: Load from file time (THIS RUNS ON CPU): " << readFileTime.count() << "ms" << std::endl;
-    std::cout << "GPU: Proccessing Time: " << procTime.count() << "ms" << std::endl;
-    std::cout << "GPU: Number of " << numberToFind << "'s in matrix: " << output << std::endl;
-    
-    return 0;
-}
-
 //helper function for using CUDA to search for a number in parallel
-std::chrono::milliseconds numberSearchCuda(std::vector<char> board, int* output, char target) {
+std::chrono::milliseconds charSearchCuda(std::vector<char> board, int* output, char target) {
     int row_amount = board.size();
 
     //out
@@ -93,3 +64,98 @@ std::chrono::milliseconds numberSearchCuda(std::vector<char> board, int* output,
     return procDuration;
 
 }
+
+
+
+//helper function for using CUDA to calc euclidain distance in parallel
+__global__ void euclideanDistanceKernel(char* vector, int size, float* result) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (tid < size) {
+        result[tid] = static_cast<float>(vector[tid]);
+    }
+}
+
+std::chrono::milliseconds euclideanDistanceCUDA(std::vector<char>& inputVec, float* output) {
+    int size = static_cast<int>(inputVec.size());
+
+    // Device vectors
+    char* d_vector;
+    float* d_result;
+
+    // Allocate memory on the device
+    cudaMalloc((void**)&d_vector, size * sizeof(char));
+    cudaMalloc((void**)&d_result, size * sizeof(float));
+
+    // Copy input vector from host to device
+    cudaMemcpy(d_vector, inputVec.data(), size * sizeof(char), cudaMemcpyHostToDevice);
+
+    // Define grid and block sizes
+    int blockSize = 256;
+    int gridSize = (size + blockSize - 1) / blockSize;
+
+    std::chrono::milliseconds procDuration;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Launch the kernel to convert characters to floats
+    euclideanDistanceKernel<<<gridSize, blockSize>>>(d_vector, size, d_result);
+
+    // Copy the result vector from device to host
+    float* h_result = new float[size];
+    cudaMemcpy(h_result, d_result, size * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Calculate Euclidean distance on the host
+    float distance = 0.0f;
+    for (int i = 0; i < size; ++i) {
+        distance += h_result[i] * h_result[i];
+    }
+    distance = std::sqrt(distance);
+    *output = distance; 
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    // Free memory on the device
+    cudaFree(d_vector);
+    cudaFree(d_result);
+    delete[] h_result;
+
+    return procDuration;
+}
+
+int main(int argc, char* argv[])
+{
+    if (argc != 4) {
+        std::cout << "Usage: " << argv[0] << " <input file>" << "<rows>" << "<number to find>" << std::endl;
+        exit(1);
+    }
+
+    std::string fileName = argv[1];
+    int rows = atoi(argv[2]);
+    char numberToFind = *argv[3];
+
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<char> input = testFileToArray(fileName, rows);
+    auto end = std::chrono::high_resolution_clock::now();
+
+    int output = 0;
+    float outputDistance = 0.0f;
+
+    std::chrono::milliseconds readFileTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::chrono::milliseconds procTime = charSearchCuda(input, &output, numberToFind);
+
+    std::cout << "Starting numberSearchCuda()" << std::endl;
+    std::cout << "GPU: Load from file time (THIS RUNS ON CPU): " << readFileTime.count() << "ms" << std::endl;
+    std::cout << "GPU: Proccessing Time: " << procTime.count() << "ms" << std::endl;
+    std::cout << "GPU: Number of " << numberToFind << "'s in matrix: " << output << std::endl;
+    std::cout <<"\n" << std::endl;
+
+    procTime = euclideanDistanceCUDA(input, &outputDistance);
+
+    std::cout << "Starting euclideanDistanceCUDA()" << std::endl;
+    std::cout << "GPU: Proccessing Time: " << procTime.count() << "ms" << std::endl;
+    std::cout << "GPU: Euclidian Distance: " << outputDistance << std::endl;
+    return 0;
+}
+
+

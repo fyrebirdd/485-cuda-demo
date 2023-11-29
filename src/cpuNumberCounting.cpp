@@ -1,6 +1,8 @@
 #include "testFileToArray.hpp"
 #include <chrono>
 #include <cstdlib>
+#include <cmath>
+
 
 int numberSearchCPU(std::vector<char> matrix, std::string target){
     int numCount = 0;
@@ -9,6 +11,21 @@ int numberSearchCPU(std::vector<char> matrix, std::string target){
             numCount++;
         }
     }return numCount;
+}
+
+// Function to calculate Euclidean distance of a vector
+float euclideanDistance(const std::vector<char> vector) {
+    float distance = 0.0f;
+
+    // Sum the squares of each element in the vector
+    for (float element : vector) {
+        distance += static_cast<float>(element) * static_cast<float>(element);
+    }
+
+    // Take the square root of the sum to get the Euclidean distance
+    distance = std::sqrt(distance);
+
+    return distance;
 }
 
 int main(int argc, char* argv[]){
@@ -38,9 +55,21 @@ int main(int argc, char* argv[]){
     procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(procEnd-procStart);
 
     // Outputing times
+    std::cout << "Starting numberSearchCPU()" << std::endl;
     std::cout << "CPU: Load from file time (THIS RUNS ON CPU): " << mallocDuration.count() << "ms" << std::endl;
     std::cout << "CPU: Proccessing Time: " << procDuration.count() << "ms" << std::endl;
     std::cout << "CPU: Number of " << targetChar << "'s in matrix: " << numCount << std::endl;
+    std::cout <<"\n" << std::endl;
+    
+    // running and timing CPU calculaion on vector
+    procStart = std::chrono::high_resolution_clock::now();
+    float dist = euclideanDistance(matrix);
+    procEnd = std::chrono::high_resolution_clock::now();
+    procDuration = std::chrono::duration_cast<std::chrono::milliseconds>(procEnd-procStart);
+
+    std::cout << "Starting euclideanDistanceCPU()" << std::endl;
+    std::cout << "CPU: Proccessing Time: " << procDuration.count() << "ms" << std::endl;
+    std::cout << "CPU: Euclidian Distance: " << dist << std::endl;
 
     return 0;
 }
