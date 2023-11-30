@@ -8,5 +8,4 @@
 #include <sstream>
 
 // Function declarations
-std::vector<char> testFileToArray(std::string fileName, int rows);
-std::vector<char> splitString(std::string input, const char& delimiter);
+std::vector<char> testFileToArray(const std::string& fileName);
