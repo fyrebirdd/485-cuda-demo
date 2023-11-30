@@ -5,7 +5,7 @@ $ mkdir cmake-build
 $ cd cmake-build
 $ cmake ..
 ```
-This will generate the solution file for visual studio in which you can then build the solution.
+This will generate the sln/make file which you can then use to build the solution.
 
 ## Generating Tests
 ```
@@ -34,9 +34,9 @@ Character you want to search for in the file (should be a number between 0-9), t
 ## Running the binaries on their own
 ```
 $cd testing
-$ ./runCountTest.exe <file> <char> on windows
-$ ./runEDistTest.exe <file> on windows
+$ ./runCountTest.exe <file> <char> //on windows
+$ ./runEDistTest.exe <file> //on windows
 or
-$ ./runCountTest <file> <char> on linux
-$ ./runEDistTest <file> on windows
+$ ./runCountTest <file> <char> //on linux
+$ ./runEDistTest <file> //on linux
 ```
