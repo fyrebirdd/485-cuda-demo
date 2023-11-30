@@ -1,4 +1,5 @@
 ## Build Instructions   
+Make sure you have the [CUDA sdk](https://developer.nvidia.com/cuda-downloads) installed
 ```
 $ mkdir cmake-build
 $ cd cmake-build
