@@ -10,12 +10,12 @@ void HandleError(cudaError_t cudaStatus, std::string functionCalling) {
     }
 }
 
-__global__ void euclideanDistanceKernel(char* vector, int size, float* result) {
+__global__ void euclideanDistanceKernel(char* vector, int size, double* result) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (tid < size) {
-        float valAsFloat = static_cast<float>(vector[tid]);
-        float square = std::pow(valAsFloat,2);
+        int valAsInt = (vector[tid] - '0');
+        double square = valAsInt * valAsInt;
         atomicAdd(result,square);
     }
 }
@@ -25,14 +25,14 @@ float euclideanDistanceCUDA(std::vector<char>& inputVec) {
 
     // Device vectors
     char* d_vector;
-    float* d_result;
-    float h_result = 0;
+    double* d_result;
+    double h_result = 0;
 
     HandleError(cudaSetDevice(0), "cudaSetDevice");
 
     // Allocate memory on the device
     HandleError(cudaMalloc((void**)&d_vector, size * sizeof(char)), "cudaMalloc");
-    HandleError(cudaMalloc((void**)&d_result, sizeof(float)), "cudaMalloc2");
+    HandleError(cudaMalloc((void**)&d_result, sizeof(double)), "cudaMalloc2");
 
     // Copy input vector from host to device
     HandleError(cudaMemcpy(d_vector, inputVec.data(), size * sizeof(char), cudaMemcpyHostToDevice), "cudaMemcpy pre");
@@ -52,7 +52,7 @@ float euclideanDistanceCUDA(std::vector<char>& inputVec) {
     HandleError(cudaGetLastError(), "cudaGetLastError");
 
     // Copy the result vector from device to host
-    HandleError(cudaMemcpy(&h_result, d_result, sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy post");
+    HandleError(cudaMemcpy(&h_result, d_result, sizeof(double), cudaMemcpyDeviceToHost), "cudaMemcpy post");
     // Free memory on the device
     cudaFree(d_vector);
     cudaFree(d_result);
