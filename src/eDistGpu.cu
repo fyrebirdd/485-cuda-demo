@@ -14,8 +14,8 @@ __global__ void euclideanDistanceKernel(char* vector, int size, float* result) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (tid < size) {
-        int valueAsInt = (vector[tid] - '0');
-        float square = (float)(valueAsInt * valueAsInt);
+        float valAsFloat = static_cast<float>(vector[tid]);
+        float square = std::pow(valAsFloat,2);
         atomicAdd(result,square);
     }
 }
