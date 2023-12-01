@@ -14,7 +14,8 @@ __global__ void euclideanDistanceKernel(char* vector, int size, float* result) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (tid < size) {
-        float square = static_cast<float>(vector[tid]) * static_cast<float>(vector[tid]);
+        int valueAsInt = (vector[tid] - '0');
+        float square = (float)(valueAsInt * valueAsInt);
         atomicAdd(result,square);
     }
 }
@@ -31,7 +32,7 @@ float euclideanDistanceCUDA(std::vector<char>& inputVec) {
 
     // Allocate memory on the device
     HandleError(cudaMalloc((void**)&d_vector, size * sizeof(char)), "cudaMalloc");
-    HandleError(cudaMalloc((void**)&d_result, size * sizeof(float)), "cudaMalloc2");
+    HandleError(cudaMalloc((void**)&d_result, sizeof(float)), "cudaMalloc2");
 
     // Copy input vector from host to device
     HandleError(cudaMemcpy(d_vector, inputVec.data(), size * sizeof(char), cudaMemcpyHostToDevice), "cudaMemcpy pre");
